@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CW Ragchewer</title>
+  </head>
+  <body>
+    <div id="app">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">HF CW Ragchew Simulator</p>
+          <h1>Tap. Send. Ragchew.</h1>
+          <p class="subhead">
+            Straight-key feel, sidetone on your speakers, and a human-ish operator on the other end.
+          </p>
+        </div>
+        <div class="status-card">
+          <div>
+            <p class="label">Audio</p>
+            <p id="audioStatus" class="value">Locked</p>
+          </div>
+          <button id="unlockAudio" class="button ghost">Unlock audio</button>
+        </div>
+      </header>
+
+      <main class="layout">
+        <section class="panel keyer">
+          <div class="panel-header">
+            <h2>Your key</h2>
+            <div class="pill" id="keyIndicator">Idle</div>
+          </div>
+
+          <div class="key-zone" id="keyZone">
+            <div class="key-top"></div>
+            <div class="key-base"></div>
+            <p>Hold <span id="keyLabel">Left Ctrl</span>, or click/touch here to key</p>
+          </div>
+
+          <div class="controls">
+            <div class="control">
+              <label for="charWpm">Char speed (WPM)</label>
+              <div class="control-row">
+                <input id="charWpm" type="range" min="10" max="40" value="22" />
+                <input id="charWpmInput" class="wpm-input" type="text" value="22" />
+              </div>
+            </div>
+            <div class="control">
+              <label for="effWpm">Effective speed (WPM)</label>
+              <div class="control-row">
+                <input id="effWpm" type="range" min="5" max="30" value="16" />
+                <input id="effWpmInput" class="wpm-input" type="text" value="16" />
+              </div>
+            </div>
+            <div class="control">
+              <label for="keyCode">Key</label>
+              <select id="keyCode">
+                <option value="ControlLeft" selected>Left Ctrl</option>
+                <option value="ControlRight">Right Ctrl</option>
+                <option value="Enter">Enter</option>
+                <option value="ArrowRight">Right Arrow</option>
+                <option value="Backquote">Backquote (`)</option>
+                <option value="Space">Space</option>
+              </select>
+            </div>
+            <div class="control">
+              <label for="tone">Sidetone (Hz)</label>
+              <div class="control-row">
+                <input id="tone" type="range" min="350" max="900" value="650" />
+                <span id="toneValue">650</span>
+              </div>
+            </div>
+            <div class="control">
+              <label for="volume">Volume</label>
+              <div class="control-row">
+                <input id="volume" type="range" min="0" max="100" value="35" />
+                <span id="volumeValue">35</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="controls">
+            <h3 class="section-title">Audio shaping</h3>
+            <div class="control">
+              <label for="attack">Attack (ms)</label>
+              <div class="control-row">
+                <input id="attack" type="range" min="1" max="30" value="6" />
+                <span id="attackValue">6</span>
+              </div>
+            </div>
+            <div class="control">
+              <label for="release">Release (ms)</label>
+              <div class="control-row">
+                <input id="release" type="range" min="5" max="60" value="18" />
+                <span id="releaseValue">18</span>
+              </div>
+            </div>
+            <div class="control">
+              <label for="click">Key click</label>
+              <div class="control-row">
+                <input id="click" type="range" min="0" max="100" value="20" />
+                <span id="clickValue">20</span>
+              </div>
+            </div>
+            <div class="control">
+              <label for="qsbDepth">QSB depth</label>
+              <div class="control-row">
+                <input id="qsbDepth" type="range" min="0" max="100" value="10" />
+                <span id="qsbDepthValue">10</span>
+              </div>
+            </div>
+            <div class="control">
+              <label for="qsbRate">QSB rate (Hz)</label>
+              <div class="control-row">
+                <input id="qsbRate" type="range" min="10" max="120" value="30" />
+                <span id="qsbRateValue">0.30</span>
+              </div>
+            </div>
+            <div class="control">
+              <label for="qrm">QRM noise</label>
+              <div class="control-row">
+                <input id="qrm" type="range" min="0" max="100" value="8" />
+                <span id="qrmValue">8</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="decode">
+            <div>
+              <p class="label">Symbols</p>
+              <p id="symbolStream" class="mono">&nbsp;</p>
+            </div>
+            <div>
+              <p class="label">Decoded</p>
+              <p id="decodedStream" class="mono">&nbsp;</p>
+            </div>
+            <div class="decode-actions">
+              <button id="confirmSend" class="button">Confirm send</button>
+              <button id="clearMessage" class="button ghost">Clear</button>
+            </div>
+            <div class="decoder-settings">
+              <label class="toggle">
+                <input id="adaptiveTiming" type="checkbox" checked />
+                <span>Adaptive timing</span>
+              </label>
+              <label class="toggle">
+                <input id="autoSpacing" type="checkbox" checked />
+                <span>Auto spacing</span>
+              </label>
+              <label class="toggle">
+                <input id="trainingMode" type="checkbox" />
+                <span>Training mode (confirm before send)</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="practice" id="practicePanel">
+            <div class="panel-header">
+              <h3>Practice prompt</h3>
+              <label class="toggle">
+                <input id="practiceMode" type="checkbox" />
+                <span>Enable practice mode</span>
+              </label>
+            </div>
+            <p id="practicePrompt" class="mono">---</p>
+            <div class="decode-actions">
+              <button id="newPrompt" class="button ghost">New prompt</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel convo">
+          <div class="panel-header">
+            <h2>On the air</h2>
+            <div class="pill">Simulated</div>
+          </div>
+          <div id="transcript" class="transcript"></div>
+
+          <div class="decode-actions">
+            <button id="callCq" class="button">Call CQ</button>
+            <button id="resetRagchew" class="button ghost">Reset ragchew</button>
+          </div>
+
+          <div class="scratch">
+            <div class="panel-header">
+              <h3>Scratch pad</h3>
+              <span class="pill">Notes</span>
+            </div>
+            <textarea id="scratchPad" rows="7" placeholder="Jot down QTH, rig notes, or fragments before you key."></textarea>
+          </div>
+
+          <div class="panel-footer">
+            <div class="control">
+              <label for="myCall">Your call</label>
+              <input id="myCall" type="text" value="K1YOU" />
+            </div>
+            <div class="control">
+              <label for="theirCall">Other station</label>
+              <input id="theirCall" type="text" value="K2RAG" />
+            </div>
+            <div class="control">
+              <label for="stationStyle">Style</label>
+              <select id="stationStyle">
+                <option value="friendly">Friendly ragchew</option>
+                <option value="brief">Brief exchange</option>
+                <option value="dx">DX-ish</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="llm">
+            <div>
+              <h3>Optional LLM (client-side)</h3>
+              <p class="hint">Off by default to keep costs low. Uses an OpenAI-compatible endpoint.</p>
+            </div>
+            <label class="toggle">
+              <input id="llmEnabled" type="checkbox" />
+              <span>Enable LLM responses</span>
+            </label>
+            <div class="control">
+              <label for="llmEndpoint">Endpoint</label>
+              <input id="llmEndpoint" type="text" placeholder="https://api.openai.com/v1/chat/completions" />
+            </div>
+            <div class="control">
+              <label for="llmKey">API key</label>
+              <input id="llmKey" type="password" placeholder="sk-..." />
+            </div>
+            <div class="control">
+              <label for="llmModel">Model</label>
+              <input id="llmModel" type="text" value="gpt-5-mini" />
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
