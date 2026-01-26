@@ -44,6 +44,10 @@ If the LLM is not configured or errors, the app falls back to local responses.
 ```bash
 npm run build
 npm run preview
+
+## GitHub Pages
+
+This app is fully client-side and can be hosted on GitHub Pages. After `npm run build`, deploy the `dist/` folder (e.g., with `gh-pages`). 
 ```
 
 ## License

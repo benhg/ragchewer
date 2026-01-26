@@ -215,6 +215,11 @@ select {
   min-height: 36px;
 }
 
+.decode .mono.editable {
+  background: rgba(255, 255, 255, 0.9);
+  outline: 1px dashed var(--panel-border);
+}
+
 .decode-actions {
   display: flex;
   gap: 12px;

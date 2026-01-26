@@ -91,6 +91,7 @@ const state = {
   remoteQueue: Promise.resolve(),
   chatHistory: [],
   localProfile: null,
+  intraGapMs: null,
   charWpm: 22,
   effWpm: 16,
   tone: 650,
@@ -104,6 +105,7 @@ const state = {
   adaptiveTiming: true,
   autoSpacing: true,
   trainingMode: false,
+  allowTypedDecoded: false,
   autoSpacingBeforePractice: true,
   practiceMode: false,
   estimatedUnitMs: null,
@@ -118,6 +120,8 @@ const el = {
   symbolStream: document.getElementById('symbolStream'),
   decodedStream: document.getElementById('decodedStream'),
   confirmSend: document.getElementById('confirmSend'),
+  typeDecoded: document.getElementById('typeDecoded'),
+  typeDecodedWrap: document.getElementById('typeDecodedWrap'),
   clearMessage: document.getElementById('clearMessage'),
   transcript: document.getElementById('transcript'),
   callCq: document.getElementById('callCq'),
@@ -178,6 +182,10 @@ function unitMs() {
   return Math.min(Math.max(state.estimatedUnitMs, min), max);
 }
 
+function gapUnitMs() {
+  return state.intraGapMs || unitMs();
+}
+
 function letterGapUnits() {
   return state.trainingMode ? 4.5 : 3.2;
 }
@@ -206,6 +214,17 @@ function updateControlDisplays() {
 function updateTrainingUI() {
   el.confirmSend.classList.toggle('is-hidden', !state.trainingMode);
   el.trainingMode.checked = state.trainingMode;
+  el.typeDecodedWrap.classList.toggle('is-hidden', !state.trainingMode);
+  if (!state.trainingMode) {
+    state.allowTypedDecoded = false;
+    el.typeDecoded.checked = false;
+    setDecodedEditable(false);
+  }
+}
+
+function setDecodedEditable(enabled) {
+  el.decodedStream.contentEditable = enabled ? 'true' : 'false';
+  el.decodedStream.classList.toggle('editable', enabled);
 }
 
 function normalizeSpeeds() {
@@ -409,16 +428,17 @@ function scheduleGapTimers() {
 
   if (!(state.autoSpacing || state.practiceMode)) return;
 
+  const gapUnit = gapUnitMs();
   state.charTimer = setTimeout(() => {
     flushCharacter();
-  }, spacingUnitMs() * letterGapUnits());
+  }, gapUnit * letterGapUnits());
 
   state.wordTimer = setTimeout(() => {
     if (state.decoded && !state.decoded.endsWith(' ')) {
       state.decoded += ' ';
       renderStreams();
     }
-  }, spacingUnitMs() * wordGapUnits());
+  }, gapUnit * wordGapUnits());
 
   if (!state.trainingMode) {
     state.sendTimer = setTimeout(() => {
@@ -427,6 +447,12 @@ function scheduleGapTimers() {
       }
     }, Math.max(spacingUnitMs() * 12, 4000));
   }
+}
+
+function updateGapEstimate(gapMs) {
+  const base = unitMs();
+  if (gapMs < base * 0.5 || gapMs > base * 2.2) return;
+  state.intraGapMs = state.intraGapMs ? state.intraGapMs * 0.8 + gapMs * 0.2 : gapMs;
 }
 
 function flushCharacter() {
@@ -479,7 +505,9 @@ function addSymbol(symbol) {
 
 function renderStreams() {
   el.symbolStream.textContent = state.currentSymbols || '\u00a0';
-  el.decodedStream.textContent = state.decoded || '\u00a0';
+  if (!(state.allowTypedDecoded && document.activeElement === el.decodedStream)) {
+    el.decodedStream.textContent = state.decoded || '\u00a0';
+  }
 }
 
 function updateAdaptiveTiming(duration) {
@@ -495,7 +523,8 @@ function handleKeyDown() {
   if (state.keyDown) return;
   if ((state.autoSpacing || state.practiceMode) && state.lastUpAt) {
     const gapMs = performance.now() - state.lastUpAt;
-    const unit = spacingUnitMs();
+    updateGapEstimate(gapMs);
+    const unit = gapUnitMs();
     if (gapMs >= unit * (state.trainingMode ? 10 : 8)) {
       flushCharacter();
       if (state.decoded && !state.decoded.endsWith(' ')) {
@@ -800,6 +829,7 @@ function bindUI() {
   el.charWpm.addEventListener('input', (event) => {
     state.charWpm = Number(event.target.value);
     state.estimatedUnitMs = null;
+    state.intraGapMs = null;
     normalizeSpeeds();
     el.charWpmInput.value = String(state.charWpm);
     el.effWpm.value = String(state.effWpm);
@@ -813,6 +843,7 @@ function bindUI() {
       state.charWpm = Math.min(Math.max(value, 10), 40);
       el.charWpm.value = String(state.charWpm);
       state.estimatedUnitMs = null;
+      state.intraGapMs = null;
       normalizeSpeeds();
       el.effWpm.value = String(state.effWpm);
     }
@@ -904,6 +935,19 @@ function bindUI() {
     }
   });
 
+  el.typeDecoded.addEventListener('change', (event) => {
+    state.allowTypedDecoded = event.target.checked;
+    setDecodedEditable(state.allowTypedDecoded);
+    if (!state.allowTypedDecoded) {
+      renderStreams();
+    }
+  });
+
+  el.decodedStream.addEventListener('input', () => {
+    if (!state.allowTypedDecoded) return;
+    state.decoded = el.decodedStream.textContent.replace(/\s+/g, ' ').trim();
+  });
+
   el.practiceMode.addEventListener('change', (event) => {
     state.practiceMode = event.target.checked;
     if (state.practiceMode) {
@@ -956,6 +1000,7 @@ function init() {
   registerKeyEvents();
   bindUI();
   updateTrainingUI();
+  setDecodedEditable(false);
 }
 
 init();
