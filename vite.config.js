@@ -1,6 +1,10 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  // Use relative asset paths so built CSS/JS load from subpaths or file://.
-  base: './'
+  // GitHub Pages repo site at https://benhg.github.io/ragchewer/
+  base: '/ragchewer/',
+  build: {
+    // Match current GitHub Pages publish folder.
+    outDir: 'docs'
+  }
 });
