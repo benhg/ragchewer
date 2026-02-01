@@ -132,21 +132,21 @@ const el = {
   effWpm: document.getElementById('effWpm'),
   effWpmInput: document.getElementById('effWpmInput'),
   tone: document.getElementById('tone'),
-  toneValue: document.getElementById('toneValue'),
+  toneInput: document.getElementById('toneInput'),
   volume: document.getElementById('volume'),
-  volumeValue: document.getElementById('volumeValue'),
+  volumeInput: document.getElementById('volumeInput'),
   attack: document.getElementById('attack'),
-  attackValue: document.getElementById('attackValue'),
+  attackInput: document.getElementById('attackInput'),
   release: document.getElementById('release'),
-  releaseValue: document.getElementById('releaseValue'),
+  releaseInput: document.getElementById('releaseInput'),
   click: document.getElementById('click'),
-  clickValue: document.getElementById('clickValue'),
+  clickInput: document.getElementById('clickInput'),
   qsbDepth: document.getElementById('qsbDepth'),
-  qsbDepthValue: document.getElementById('qsbDepthValue'),
+  qsbDepthInput: document.getElementById('qsbDepthInput'),
   qsbRate: document.getElementById('qsbRate'),
-  qsbRateValue: document.getElementById('qsbRateValue'),
+  qsbRateInput: document.getElementById('qsbRateInput'),
   qrm: document.getElementById('qrm'),
-  qrmValue: document.getElementById('qrmValue'),
+  qrmInput: document.getElementById('qrmInput'),
   adaptiveTiming: document.getElementById('adaptiveTiming'),
   autoSpacing: document.getElementById('autoSpacing'),
   trainingMode: document.getElementById('trainingMode'),
@@ -166,6 +166,10 @@ const el = {
 
 function baseUnitMs() {
   return 1200 / state.charWpm;
+}
+
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
 }
 
 function spacingUnitMs() {
@@ -199,14 +203,14 @@ function updateControlDisplays() {
   el.effWpm.value = String(state.effWpm);
   el.charWpmInput.value = String(state.charWpm);
   el.effWpmInput.value = String(state.effWpm);
-  el.toneValue.textContent = state.tone;
-  el.volumeValue.textContent = Math.round(state.volume * 100);
-  el.attackValue.textContent = state.attackMs;
-  el.releaseValue.textContent = state.releaseMs;
-  el.clickValue.textContent = Math.round(state.clickLevel * 100);
-  el.qsbDepthValue.textContent = Math.round(state.qsbDepth * 100);
-  el.qsbRateValue.textContent = state.qsbRate.toFixed(2);
-  el.qrmValue.textContent = Math.round(state.qrmLevel * 100);
+  el.toneInput.value = String(state.tone);
+  el.volumeInput.value = String(Math.round(state.volume * 100));
+  el.attackInput.value = String(state.attackMs);
+  el.releaseInput.value = String(state.releaseMs);
+  el.clickInput.value = String(Math.round(state.clickLevel * 100));
+  el.qsbDepthInput.value = String(Math.round(state.qsbDepth * 100));
+  el.qsbRateInput.value = state.qsbRate.toFixed(2);
+  el.qrmInput.value = String(Math.round(state.qrmLevel * 100));
   el.practicePrompt.textContent = state.practicePrompt;
   el.keyLabel.textContent = el.keyCode.selectedOptions[0]?.textContent || 'Left Ctrl';
 }
@@ -878,26 +882,70 @@ function bindUI() {
     updateControlDisplays();
     updateAudioParams();
   });
+  el.toneInput.addEventListener('change', (event) => {
+    const value = Number(event.target.value);
+    if (Number.isFinite(value)) {
+      state.tone = clamp(value, 350, 900);
+      el.tone.value = String(state.tone);
+      updateControlDisplays();
+      updateAudioParams();
+    }
+  });
 
   el.volume.addEventListener('input', (event) => {
     state.volume = Number(event.target.value) / 100;
     updateControlDisplays();
     updateAudioParams();
   });
+  el.volumeInput.addEventListener('change', (event) => {
+    const value = Number(event.target.value);
+    if (Number.isFinite(value)) {
+      const clamped = clamp(value, 0, 100);
+      state.volume = clamped / 100;
+      el.volume.value = String(clamped);
+      updateControlDisplays();
+      updateAudioParams();
+    }
+  });
 
   el.attack.addEventListener('input', (event) => {
     state.attackMs = Number(event.target.value);
     updateControlDisplays();
+  });
+  el.attackInput.addEventListener('change', (event) => {
+    const value = Number(event.target.value);
+    if (Number.isFinite(value)) {
+      state.attackMs = clamp(value, 1, 30);
+      el.attack.value = String(state.attackMs);
+      updateControlDisplays();
+    }
   });
 
   el.release.addEventListener('input', (event) => {
     state.releaseMs = Number(event.target.value);
     updateControlDisplays();
   });
+  el.releaseInput.addEventListener('change', (event) => {
+    const value = Number(event.target.value);
+    if (Number.isFinite(value)) {
+      state.releaseMs = clamp(value, 5, 60);
+      el.release.value = String(state.releaseMs);
+      updateControlDisplays();
+    }
+  });
 
   el.click.addEventListener('input', (event) => {
     state.clickLevel = Number(event.target.value) / 100;
     updateControlDisplays();
+  });
+  el.clickInput.addEventListener('change', (event) => {
+    const value = Number(event.target.value);
+    if (Number.isFinite(value)) {
+      const clamped = clamp(value, 0, 100);
+      state.clickLevel = clamped / 100;
+      el.click.value = String(clamped);
+      updateControlDisplays();
+    }
   });
 
   el.qsbDepth.addEventListener('input', (event) => {
@@ -905,17 +953,46 @@ function bindUI() {
     updateControlDisplays();
     updateAudioParams();
   });
+  el.qsbDepthInput.addEventListener('change', (event) => {
+    const value = Number(event.target.value);
+    if (Number.isFinite(value)) {
+      const clamped = clamp(value, 0, 100);
+      state.qsbDepth = clamped / 100;
+      el.qsbDepth.value = String(clamped);
+      updateControlDisplays();
+      updateAudioParams();
+    }
+  });
 
   el.qsbRate.addEventListener('input', (event) => {
     state.qsbRate = Number(event.target.value) / 100;
     updateControlDisplays();
     updateAudioParams();
   });
+  el.qsbRateInput.addEventListener('change', (event) => {
+    const value = Number(event.target.value);
+    if (Number.isFinite(value)) {
+      state.qsbRate = clamp(value, 0.1, 1.2);
+      el.qsbRate.value = String(Math.round(state.qsbRate * 100));
+      updateControlDisplays();
+      updateAudioParams();
+    }
+  });
 
   el.qrm.addEventListener('input', (event) => {
     state.qrmLevel = Number(event.target.value) / 100;
     updateControlDisplays();
     updateAudioParams();
+  });
+  el.qrmInput.addEventListener('change', (event) => {
+    const value = Number(event.target.value);
+    if (Number.isFinite(value)) {
+      const clamped = clamp(value, 0, 100);
+      state.qrmLevel = clamped / 100;
+      el.qrm.value = String(clamped);
+      updateControlDisplays();
+      updateAudioParams();
+    }
   });
 
   el.adaptiveTiming.addEventListener('change', (event) => {
