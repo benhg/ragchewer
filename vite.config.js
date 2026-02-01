@@ -1,8 +1,8 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  // GitHub Pages repo site at https://benhg.github.io/ragchewer/
-  base: '/ragchewer/',
+  // Use relative asset paths so builds work on GitHub Pages and local file/preview hosts.
+  base: './',
   build: {
     // Match current GitHub Pages publish folder.
     outDir: 'docs'
